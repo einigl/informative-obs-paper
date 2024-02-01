@@ -1,0 +1,42 @@
+# This file is used as a reference to check the information requested by the user in the input file.
+# Any variable, target or range that does not exist in this file will lead to a program interruption.
+
+variables:
+  - 13co10
+  - 12cs21
+  - 12co10
+  - hcn10
+  - n2hp10
+  - hcop10
+  - cch10
+  - 32so21
+  - hnc10
+  - c18o10
+  - ch3oh21
+  - h2co12
+  - cn10h
+  - 13cop10
+  - c3h2
+  - c17o10
+
+targets:
+  - av
+  - g0
+
+ranges:
+
+  av:
+    "all": null
+    "0": [null, 1]
+    "1": [1, 2]
+    "2": [2, 6]
+    "3": [6, 15]
+    "4": [15, null]
+
+  g0:
+    "all": null
+    "0": [null, 1.0e+1]
+    "1": [1.0e+1, 3.0e+1]
+    "2": [3.0e+1, 3.0e+2]
+    "3": [3.0e+2, 1.0e+4]
+    "4": [1.0e+4, null]
