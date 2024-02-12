@@ -330,7 +330,7 @@ def latex_param(param: str) -> str:
 
     if param == 'g0' :
         s = 'G_0'
-    elif param == 'dust-av' :
+    elif param == 'av' :
         s = 'A_V'
     else:
         # By default, returns the input without raising an error

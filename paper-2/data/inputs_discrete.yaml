@@ -38,6 +38,10 @@ statistics:
   - mi
   - corr
 
-bootstrapping:
-  mi: 10
-  corr: 10
+uncertainty:
+  - name: subsampling
+    args:
+      n: 5
+  - name: bootstrapping
+    args:
+      n: 20

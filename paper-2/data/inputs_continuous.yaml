@@ -1,45 +1,39 @@
-variables: [13co10]
-    targets: [av]
-    - 13co10
-    - 12cs21
-    - 12co10
-    - hcn10
-    - n2hp10
-    - hcop10
-    - cch10
-    - 32so21
-    - hnc10
-    - c18o10
-    - ch3oh21
-    - h2co12
-    - cn10h
-    - 13cop10
-    - c3h2
-    - c17o10
+variables:
+  - [13co10]
+  - [12co10]
+  - [c18o10]
+  - [hcop10]
+  - [12cs21]
+  - [hcn10]
+  - [hnc10]
+  - [n2hp10]
 
 targets:
   - av
   - g0
   - [av, g0]
 
-regimes:
-  - av
-  - g0
-  - [av, g0]
-
 windows:
-  - length: 1
-    points: 20
-    scale: log
-  - length: 1
-    points: 20
-    scale: log
-  - length: [1, 1]
-    points: [20, 20]
-    scale: [log, log]
+  - targets: av
+    length: 20 # Percentage of total range (after transformation)
+    points: 50
+  - targets: g0
+    length: 20
+    points: 50
+  - targets: [av, g0]
+    length: [20, 20]
+    points: [50, 50]
 
 min_samples: 200
 
 statistics:
   - mi
   - corr
+
+uncertainty:
+  - name: subsampling
+    args:
+      n: 3
+  - name: bootstrapping
+    args:
+      n: 10

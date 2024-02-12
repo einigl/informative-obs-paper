@@ -44,5 +44,3 @@ handler = infovar.DiscreteHandler(
 handler.update(
     inputs_dict
 )
-
-# handler.delete_stats("av", "corr")
