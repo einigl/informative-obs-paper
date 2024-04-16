@@ -1,0 +1,34 @@
+windows:
+  # - targets: av
+  #   length: 20 # Percentage of total range (after transformation)
+  #   points: 50
+  # - targets: g0
+  #   length: 20
+  #   points: 50
+  - features: [av, g0]
+    bounds: [
+      [0.7, 90.5],
+      [1.0e+0, 1.0e+5]
+    ]
+    bounds_include_windows: true
+    scale: [log, log]
+    num_windows: [7, 7]
+    points: [100, 100]
+
+min_samples: 200
+max_samples: 50_000
+
+statistics:
+  - mi
+  # - linearinfo
+  # - linearinfogauss
+
+# uncertainty:
+#   mi:
+#     name: subsampling
+#     args:
+#       n: 3
+#   linearinfo:
+#     name: bootstrapping
+#     args:
+#       n: 10

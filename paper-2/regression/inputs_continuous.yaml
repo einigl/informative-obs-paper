@@ -1,0 +1,22 @@
+windows:
+  - features: [av, g0]
+    bounds: [
+      [5.0e-1, 16],
+      [1.0e-1, 1.0e+5]
+    ]
+    scale: [log, log]
+    length: [2, 10]
+    overlap: 0.5
+    opensides: [true, true]
+
+min_samples: 200
+max_samples: 50_000
+
+statistics:
+  - mi
+
+uncertainty:
+  mi:
+    name: subsampling
+    args:
+      n: 3

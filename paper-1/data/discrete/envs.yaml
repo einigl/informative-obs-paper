@@ -1,0 +1,11 @@
+all:
+  Avmax: [3, 25]
+
+pdr1:
+  Avmax: [3, 6]
+
+pdr2:
+  Avmax: [6, 12]
+
+pdr3:
+  Avmax: [12, 25]

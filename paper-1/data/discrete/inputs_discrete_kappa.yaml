@@ -1,0 +1,17 @@
+restrictions:
+  - all
+  - pdr1
+  - pdr2
+  - pdr3
+
+min_samples: 200
+max_samples: 10_000
+
+statistics:
+  - mi
+
+uncertainty:
+  mi:
+    name: subsampling
+    args:
+      n: 5

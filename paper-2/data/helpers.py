@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import numpy as np
 
@@ -28,6 +28,17 @@ def prepare_data(
         orion_util.load_param(p)[0].flatten() for p in param_names
     ])
 
-    integs = infobs.data.replace_negative(integs, noises)
+    # integs = infobs.data.replace_negative(integs, noises)
 
     return integs, params
+
+def select_envs(
+    lines: np.ndarray,
+    params: np.ndarray,
+    env_names: Union[str, List[str]]
+) -> Tuple[np.ndarray, np.ndarray]:
+
+    env_list = [orion_util.load_env(name)[0].astype(bool).flatten() for name in env_names]
+    env = np.any(np.column_stack(env_list), axis=1)
+
+    return lines[env, :], params[env, :]

@@ -1,0 +1,31 @@
+restrictions:
+  - all
+  - pdr1
+  - pdr2
+  - pdr3
+
+min_samples: 200
+
+statistics:
+  - mi
+  # - linearinfo
+  # - linearinfolog10
+  # - linearinforeparam
+
+uncertainty:
+  mi:
+    name: subsampling
+    args:
+      n: 5
+  # linearinfo:
+  #   name: bootstrapping
+  #   args:
+  #     n: 20
+  # linearinfolog10:
+  #   name: bootstrapping
+  #   args:
+  #     n: 20
+  # linearinfogauss:
+  #   name: bootstrapping
+  #   args:
+  #     n: 20

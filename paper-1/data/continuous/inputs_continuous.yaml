@@ -1,0 +1,42 @@
+windows:
+  - features: [P, radm]
+    bounds: [
+      [1.0e+5, 1.0e+9],
+      [1.0e+0, 1.0e+5],
+    ]
+    scale: [log, log]
+    length: [10, 10]
+    points: [100, 100]
+  - features: [P, Avmax]
+    bounds: [
+      [1.0e+5, 1.0e+9],
+      [1.0e+0, 4.0e+1]
+    ]
+    scale: [log, log]
+    length: [10, 2]
+    points: [100, 100]
+  - features: [radm, Avmax]
+    bounds: [
+      [1.0e+0, 1.0e+5],
+      [1.0e+0, 4.0e+1],
+    ]
+    scale: [log, log]
+    length: [10, 2]
+    points: [100, 100]
+
+min_samples: 200
+max_samples: 10_000
+
+statistics:
+  - mi
+  # - linearinfo
+
+# uncertainty:
+#   mi:
+#     name: subsampling
+#     args:
+#       n: 3
+#   linearinfo:
+#     name: bootstrapping
+#     args:
+#       n: 10

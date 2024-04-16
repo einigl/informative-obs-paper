@@ -1,0 +1,7 @@
+nnbma
+beetroots
+matplotlib
+astropy
+ipykernel
+scikit-learn
+ipympl

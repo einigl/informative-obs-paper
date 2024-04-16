@@ -1,0 +1,23 @@
+all:
+  lower_bounds_lin:
+    Av: 1.0e+0
+  upper_bounds_lin:
+    Av: 4.0e+1
+
+pdr1:
+  lower_bounds_lin:
+    Av: 3
+  upper_bounds_lin:
+    Av: 6
+
+pdr2:
+  lower_bounds_lin:
+    Av: 6
+  upper_bounds_lin:
+    Av: 12
+
+pdr3:
+  lower_bounds_lin:
+    Av: 12
+  upper_bounds_lin:
+    Av: 40

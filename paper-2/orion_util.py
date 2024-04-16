@@ -2,7 +2,7 @@
 
 import os
 import pickle
-from typing import List, Tuple, Optional, Union
+from typing import List, Tuple, Optional, Union, Literal
 from warnings import warn
 
 import numpy as np
@@ -26,7 +26,7 @@ __all__ = [
     "load_param",
     "plot_map",
     "latex_line",
-    "latex_quantity"
+    "latex_param",
 ]
 
 # Loading
@@ -55,6 +55,13 @@ _params_dict = {
     'g0'        : 'G0',
 }
 
+_envs_dict = {
+    'full': 'full',
+    'filaments': 'filaments',
+    'horsehead': 'horsehead',
+    'pdr1': 'pdr1'
+}
+
 def get_lines() -> List[str]:
     return list(_lines_dict.keys())
 
@@ -81,6 +88,13 @@ def load_param(param: str) -> Tuple[np.ndarray, fits.Header]:
         raise ValueError(f"'{param}' is not an existing parameter.")
     hdu = fits.open(os.path.join(path, "data", "raw", "parameters", f"{_params_dict[param]}.fits"))[0]
     return hdu.data, hdu.header
+
+def load_env(env: str) -> Tuple[np.ndarray, fits.Header]:
+    env = env.strip().lower()
+    if env not in _envs_dict:
+        raise ValueError(f"'{env}' is not an existing environment.")
+    hdu = fits.open(os.path.join(path, "data", "raw", "envs", f"{_envs_dict[env]}.fits"))[0]
+    return hdu.data.astype(bool), hdu.header
 
 
 # Display
@@ -337,20 +351,6 @@ def latex_param(param: str) -> str:
         return param
 
     return s
-
-def expformat(value: str) -> str:
-    """ TODO """
-    if value == 0:
-        return "0"
-    value = f"{value:.1e}"
-    mant = value[:-4]
-    if mant[-1] == '0':
-        mant = mant[:-2]
-    exp = value[-2:]
-    newexp = int(exp)
-    if newexp == 0:
-        return f"{mant}"
-    return f"{mant}\\cdot 10^{newexp}"
 
 
 if __name__ == "__main__":
