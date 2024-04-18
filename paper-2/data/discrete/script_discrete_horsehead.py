@@ -22,7 +22,7 @@ with open(os.path.join(scriptpath, 'inputs_discrete_pdr.yaml'), 'r') as f:
 
 # Load and preprocess data
     
-line_names, param_names = get_lines(), get_params()
+line_names, param_names = get_lines(), ["av", "g0"]
 lines, params = prepare_data(line_names, param_names)
 
 lines, params = select_envs(lines, params, ["horsehead"])

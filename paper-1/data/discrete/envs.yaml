@@ -1,11 +1,11 @@
-all:
-  Avmax: [3, 25]
+av_3_24:
+  Avmax: [3, 24]
 
-pdr1:
+av_3_6:
   Avmax: [3, 6]
 
-pdr2:
+av_6_12:
   Avmax: [6, 12]
 
-pdr3:
-  Avmax: [12, 25]
+av_12_24:
+  Avmax: [12, 24]

@@ -53,6 +53,9 @@ _lines_dict = {
 _params_dict = {
     'av'        : 'Av',
     'g0'        : 'G0',
+    'tkin'      : 'Tkin',
+    'nh2'       : 'NH2',
+    'density'   : 'density',
 }
 
 _envs_dict = {
@@ -346,6 +349,13 @@ def latex_param(param: str) -> str:
         s = 'G_0'
     elif param == 'av' :
         s = 'A_V'
+    elif param == 'tkin' :
+        s = 'T_{kin}'
+    elif param == 'nh2' :
+        s = 'N_{H_2}'
+    elif param == 'density' :
+        s = 'n_{H_2}'
+
     else:
         # By default, returns the input without raising an error
         return param

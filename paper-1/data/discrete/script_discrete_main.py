@@ -67,9 +67,9 @@ handler.set_restrictions(
 # Launch the procedure
 
 line_names = getter.x_names
-param_names = ["Avmax", "P", "radm"]
+param_names = ["Avmax", "radm"] # "P"
 
-n_lines = [1]#, 2]#, 3] TODO
+n_lines = [1, 2]#, 3] TODO
 
 emir_line_names = line_names[:-3]
 fir_line_names = line_names[-3:]

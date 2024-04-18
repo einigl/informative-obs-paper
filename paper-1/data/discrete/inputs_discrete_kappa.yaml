@@ -1,8 +1,8 @@
 restrictions:
-  - all
-  - pdr1
-  - pdr2
-  - pdr3
+  - av_3_24
+  - av_3_6
+  - av_6_12
+  - av_12_24
 
 min_samples: 200
 max_samples: 10_000

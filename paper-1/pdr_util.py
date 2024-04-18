@@ -46,21 +46,39 @@ def get_physical_env(
 
     if name == "horsehead":
         return {
-            "P": [10**5, 10**5], # [10**5.0, 10**6.5], TODO on a modifié
+            "P": [10**5.0, 10**6.5], # [10**5, 10**5]
             "radm": [10**1.0 / conv_fact, 10**2.4 / conv_fact],
             # "Avmax": [10**0.2, 10**1.4],
             "Avmax": [1, 25],
             "angle": [0.0, 0.0]
         }
 
+# Helpers
+    
+def convert_unit(T, nu, dv):
+    """
+    [T]: K
+    [nu]: Hz
+    [dv]: km.s^-1
+    """
+    kb = 1.380_649e-23 # m^2.kg.s^-2.K^-1
+    c = 299_792_458 # m.s^-1
+    return (2 * 1e6 * (nu/c)**3 * kb) * T * dv
+
+def integrate_channels(x, n):
+    """
+    x: intensity for a single velocity channel
+    n: number of velocity channel to integrate
+    """
+    return n**0.5 * x
+
 
 # Sampling
     
-def bounded_power_law(
+def _bounded_power_law(
     n_samples: int,
     bounds: Tuple[float, float],
-    alpha: float=1.,
-    seed: Optional[int]=None # TODO
+    alpha: float=1.
 ):
     xmin, xmax = bounds
     beta = alpha #1 - alpha
@@ -70,13 +88,11 @@ def bounded_power_law(
     x = np.random.rand(n_samples)
     return (a + b*x)**(1/beta)
 
-def simulate(
+
+def params_sampling(
     n_samples: int,
     bounds: Dict[str, Tuple[float, float]],
-    obs_time: float,
-    noise: bool=True,
-    kappa: Union[float, Tuple[float, float]]=1.,
-    seed: Optional[int]=None,
+    seed: Optional[int]=None
 ) -> pd.DataFrame:
     """
     TODO
@@ -86,40 +102,7 @@ def simulate(
 
     rng = np.random.default_rng(seed=seed)
 
-    model_name = "meudon_pdr_model_dense"
-    env = "horsehead"
-
-    assert env in ["all", "horsehead"]
-
-    path_model = os.path.join(os.path.dirname(__file__), "data", "models")
-    
-
-    # Load scaler and neural network
-    
-    net = NeuralNetwork.load(
-        model_name,
-        path_model
-    )
-   
-
-    # Reference dataframe
-
-    emir_df = pd.read_csv(os.path.join(
-        os.path.dirname(__file__), "data", "raw", "emir_lines_selection", "emir_table_filtered.csv"
-    ))
-
-    emir_lines = emir_df["line_id"].to_list()
-    additional_lines = ["c_el3p_j1__el3p_j0", "c_el3p_j2__el3p_j1", "cp_el2p_j3_2__el2p_j1_2"] # 2 lines of CI, 1 line of C+
-
-    
-    # Restrictions
-
-    net.restrict_to_output_subset(
-        emir_lines + additional_lines
-    )
-
-
-    # IID samples in scaled space
+    # Sampling
 
     dict_is_log_scale_params = {
         "P": True,
@@ -135,67 +118,37 @@ def simulate(
         "angle": None
     }
 
-    Theta = [None] * net.input_features
+    param_names = ["P", "radm", "Avmax", "angle"]
 
-    for i, name in enumerate(net.inputs_names):
+    Theta = [None] * len(param_names)
+
+    for i, name in enumerate(param_names):
         low, upp = bounds[name]
         alpha = dict_power_law_params[name]
         if dict_is_log_scale_params[name]:
-            Theta[i] = bounded_power_law(
-                n_samples, (low, upp),
-                alpha, seed=seed # TODO
+            Theta[i] = _bounded_power_law(
+                n_samples, (low, upp), alpha
             )
             # Theta[i] = 10**rng.uniform(
             #     np.log10(low), np.log10(upp), size=n_samples
-            # )
+            # ) # TODO : laisser le choix du prior
         else:
             Theta[i] = rng.uniform(
                 low, upp, size=n_samples
             )
 
-    Theta = np.column_stack(Theta)
-    Y = 10**net.evaluate(Theta, transform_inputs=True)
+    return pd.DataFrame(np.column_stack(Theta), columns=param_names)
+        
 
-
-    # Apply kappa
-
-    if isinstance(kappa, (float, int)):
-        low, upp = kappa, kappa
-    else:
-        assert isinstance(kappa, (Tuple, List)) and len(kappa) == 2
-        low, upp = kappa
-
-    kappa = 10**rng.uniform(
-        np.log10(low), np.log10(upp), size=(n_samples, 1) # Same kappa for all lines
-    )
-
-    df = pd.DataFrame(
-        np.hstack((Theta[:, :3], kappa, kappa*Y)),
-        columns=net.inputs_names[:3] + ["kappa"] + net.current_output_subset
-    )
-
-    if not noise:
-        return df
-
-
-    # Noise
-
-    def convert_unit(T, nu, dv):
-        """
-        [T]: K
-        [nu]: Hz
-        [dv]: km.s^-1
-        """
-        kb = 1.380_649e-23 # m^2.kg.s^-2.K^-1
-        c = 299_792_458 # m.s^-1
-        return (2 * 1e6 * (nu/c)**3 * kb) * T * dv
-
-    def integrate_rms(rms, N):
-        """
-        rms: RMS value for a single velocity channel
-        N: number of velocity channel to integrate
-        """
-        return N**0.5 * rms
+def _add_noise(
+    df: pd.DataFrame,
+    emir_df: pd.DataFrame,
+    obs_time: float,
+) -> pd.DataFrame:
+    """
+    Add noise to Meudon PDR prediction intensities
+    """
+    n_params = 5
 
     # EMIR lines
     n_channels = 20 # Already taken in account in selection.py
@@ -209,7 +162,7 @@ def simulate(
     n_channels_additional = [linewidth / _dv for _dv in dv_additional]
 
     sigma_a = emir_df["Noise RMS (Mathis units, log10) [1 min]"].to_list()\
-        + [np.log10(convert_unit(integrate_rms(T, n), nu, dv))\
+        + [np.log10(convert_unit(integrate_channels(T, n), nu, dv))\
            for T, n, nu, dv in zip(sigma_a_additional, n_channels_additional, freqs_additional, dv_additional)]
     
     sigma_a = 10**np.array(sigma_a) / obs_time**0.5 # Atmospheric error
@@ -217,19 +170,115 @@ def simulate(
     percent = emir_df["Calibration error (%)"].to_list() + [20, 20, 5]
     sigma_m = np.log(1 + np.array(percent)/100) # Calibration error
 
-    size = (df.shape[0], df.shape[1] - 4)
+    size = (df.shape[0], df.shape[1] - n_params)
 
-    eps_a = rng.normal(loc=0., scale=sigma_a, size=size)
-    eps_m = rng.lognormal(mean=-(sigma_m**2) / 2, sigma=sigma_m, size=size)
+    eps_a = np.random.normal(loc=0., scale=sigma_a, size=size)
+    eps_m = np.random.lognormal(mean=-(sigma_m**2) / 2, sigma=sigma_m, size=size)
 
-    y = eps_m * df.iloc[:, 4:].values + eps_a
+    y = eps_m * df.iloc[:, n_params:].values + eps_a
 
     df_noise = pd.concat([
-        df.iloc[:, :4],
-        pd.DataFrame(y, columns=df.columns[4:])
+        df.iloc[:, :n_params],
+        pd.DataFrame(y, columns=df.columns[n_params:])
     ], axis=1)
 
     return df_noise
+
+
+# PDR Code emulator
+
+def pdr_model(
+    df_params: pd.DataFrame,
+    obs_time: float,
+    noise: bool=True,
+    kappa: Union[float, Tuple[float, float]]=1.,
+) -> pd.DataFrame:
+    """
+    TODO
+    """
+
+    # Init
+
+    model_name = "meudon_pdr_model_dense"
+    path_model = os.path.join(os.path.dirname(__file__), "data", "models")
+    
+    # Load neural network
+    
+    net = NeuralNetwork.load(
+        model_name,
+        path_model
+    )
+   
+    # Reference dataframe
+
+    emir_df = pd.read_csv(os.path.join(
+        os.path.dirname(__file__), "data", "raw", "emir_lines_selection", "emir_table_filtered.csv"
+    ))
+
+    emir_lines = emir_df["line_id"].to_list()
+    additional_lines = ["c_el3p_j1__el3p_j0", "c_el3p_j2__el3p_j1", "cp_el2p_j3_2__el2p_j1_2"] # 2 lines of CI, 1 line of C+
+
+    # Restrictions
+
+    net.restrict_to_output_subset(
+        emir_lines + additional_lines
+    )
+
+    # Reorder inputs
+
+    df_params = df_params[net.inputs_names]
+
+    # PDR code predictions
+
+    Y = 10**net.evaluate(df_params.values, transform_inputs=True)
+
+    # Apply kappa
+
+    if isinstance(kappa, (int, float)):
+        kappa = (kappa, kappa)
+    _kappa = 10**np.random.uniform(np.log10(kappa[0]), np.log10(kappa[1]))
+
+    df = pd.DataFrame(
+        np.hstack((df_params.values, _kappa * np.ones((Y.shape[0], 1)), _kappa * Y)),
+        columns=net.inputs_names + ["kappa"] + net.current_output_subset
+    )
+
+    if not noise:
+        return df
+    
+    return _add_noise(
+        df, emir_df, obs_time
+    )
+
+
+def simulate(
+    n_samples: int,
+    bounds: Dict[str, Tuple[float, float]],
+    obs_time: float,
+    noise: bool=True,
+    kappa: Union[float, Tuple[float, float]]=1.,
+    seed: Optional[int]=None,
+) -> pd.DataFrame:
+    """
+    TODO
+    """
+
+    # Parameters sampling
+
+    df_params = params_sampling(
+        n_samples,
+        bounds,
+        seed=seed
+    )
+
+    # PDR code predictions
+
+    return pdr_model(
+        df_params,
+        obs_time=obs_time,
+        noise=noise,
+        kappa=kappa
+    )
 
 
 # Getter
@@ -258,14 +307,8 @@ class PDRGetter(infovar.StandardGetter):
             seed=seed
         )
 
-        # Conversion to linear scale
-
-        # df["P"] = df["P"].apply(lambda t: 10**t)
-        # df["radm"] = df["radm"].apply(lambda t: 10**t)
-        # df["Avmax"] = df["Avmax"].apply(lambda t: 10**t)
-
         # Attributes
-        n_params = 4 # P, radm, Avmax, kappa
+        n_params = 5 # P, radm, Avmax, angle, kappa
         self.x_names = df.columns[n_params:].to_list()
         self.y_names = df.columns[:n_params].to_list()
         self.x = df.values[:, n_params:]
